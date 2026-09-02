@@ -1,0 +1,29 @@
+{
+  "location": "Ramnagar Water Kiosk",
+  "status": "UNSAFE",
+  "alarmLevel": "HIGH",
+  "timestamp": "2026-09-02T14:10:00",
+  "parameters": {
+    "ph": 6.1,
+    "tds": 720,
+    "turbidity": 45,
+    "temperature": 30
+  },
+  "microbialRisk": "HIGH",
+  "purification": {
+    "uv": false,
+    "roUf": false
+  },
+  "trigger": [
+    "High turbidity — 45 NTU",
+    "High TDS — 720 ppm",
+    "pH outside safe range — 6.1",
+    "Purification system inactive",
+    "Microbial contamination risk — HIGH"
+  ],
+  "actions": {
+    "siren": true,
+    "sms": true,
+    "smsRecipients": 12
+  }
+}
