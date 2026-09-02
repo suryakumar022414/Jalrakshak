@@ -1,65 +1,165 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Header } from '@/components/Header';
-import { AlarmCard } from '@/components/AlarmCard';
-import { AlarmReasons } from '@/components/AlarmReasons';
+import React, { useState, useEffect, useRef } from 'react';
+import { Sidebar } from '@/components/Sidebar';
+import { StatusBanner } from '@/components/StatusBanner';
 import { ParameterGrid } from '@/components/ParameterGrid';
+import { TrendChart } from '@/components/TrendChart';
+import { VillagesWidget } from '@/components/VillagesWidget';
+import { SystemStatusWidget } from '@/components/SystemStatusWidget';
+import { SimulationControls } from '@/components/SimulationControls';
+import { AlarmReasons } from '@/components/AlarmReasons';
 import { PurificationStatus } from '@/components/PurificationStatus';
 import { AlertActions } from '@/components/AlertActions';
-import { SimulationToolbar } from '@/components/SimulationToolbar';
-import { WaterAlarmData } from '@/types/alarm';
-import mockData from '@/data/mockAlarm.json';
-import { ShieldCheck, LifeBuoy } from 'lucide-react';
+import { WaterAlarmData, WaterParameters, INITIAL_WATER_DATA } from '@/types/alarm';
+import { speakMultilingualAlert, startSirenAudio, stopSirenAudio } from '@/utils/audioAlert';
 
 export default function Home() {
-  const [alarmData, setAlarmData] = useState<WaterAlarmData>(mockData as WaterAlarmData);
+  const [alarmData, setAlarmData] = useState<WaterAlarmData>(INITIAL_WATER_DATA);
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'alerts' | 'devices'>('dashboard');
+  const [audioMuted, setAudioMuted] = useState(false);
+
+  const prevStatusRef = useRef<'SAFE' | 'UNSAFE'>('SAFE');
+
+  // Dynamic evaluation whenever parameters change
+  const handleUpdateParameters = (newParams: WaterParameters) => {
+    const triggers: string[] = [];
+
+    if (newParams.ph < 6.5 || newParams.ph > 8.5) {
+      triggers.push(`pH outside safe range (${newParams.ph})`);
+    }
+    if (newParams.tds > 500) {
+      triggers.push(`High TDS level (${newParams.tds} ppm)`);
+    }
+    if (newParams.turbidity > 15) {
+      triggers.push(`High turbidity (${newParams.turbidity} NTU)`);
+    }
+    if (newParams.temperature > 28) {
+      triggers.push(`High water temperature (${newParams.temperature} °C)`);
+    }
+
+    const isUnsafe = triggers.length > 0;
+    const newStatus: 'SAFE' | 'UNSAFE' = isUnsafe ? 'UNSAFE' : 'SAFE';
+
+    // Handle voice announcement on status change (Hindi, Urdu, English)
+    if (prevStatusRef.current !== newStatus && !audioMuted) {
+      speakMultilingualAlert(newStatus);
+      if (newStatus === 'UNSAFE') {
+        startSirenAudio();
+      } else {
+        stopSirenAudio();
+      }
+      prevStatusRef.current = newStatus;
+    } else if (newStatus === 'SAFE') {
+      stopSirenAudio();
+    }
+
+    setAlarmData(prev => ({
+      ...prev,
+      status: newStatus,
+      alarmLevel: isUnsafe ? 'HIGH' : 'NORMAL',
+      microbialRisk: isUnsafe ? 'HIGH' : 'LOW',
+      timestamp: new Date().toISOString(),
+      parameters: newParams,
+      purification: {
+        uv: !isUnsafe,
+        roUf: !isUnsafe
+      },
+      trigger: isUnsafe
+        ? [...triggers, "Purification system inactive", "High microbial contamination risk"]
+        : [],
+      actions: {
+        siren: isUnsafe,
+        sms: isUnsafe,
+        smsRecipients: isUnsafe ? 12 : 0
+      }
+    }));
+  };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-red-500 selection:text-white pb-16">
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col md:flex-row font-sans selection:bg-emerald-500 selection:text-white">
       
-      {/* 1. Minimal Header */}
-      <Header data={alarmData} />
+      {/* 1. Left Sidebar Navigation */}
+      <Sidebar
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        isUnsafe={alarmData.status === 'UNSAFE'}
+        audioMuted={audioMuted}
+        onToggleAudio={() => setAudioMuted(!audioMuted)}
+      />
 
-      {/* Main Dashboard Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6">
+      {/* 2. Main Dashboard Area */}
+      <main className="flex-1 p-4 sm:p-6 md:p-8 space-y-6 max-w-7xl mx-auto w-full overflow-hidden">
         
-        {/* Simulation Interactive Bar */}
-        <SimulationToolbar currentData={alarmData} onUpdate={setAlarmData} />
+        {/* Top Header & Status Banner matching user image */}
+        <StatusBanner data={alarmData} />
 
-        {/* 2. Main Hero Alarm Card */}
-        <AlarmCard data={alarmData} />
+        {/* Dynamic Telemetry Simulator Controls */}
+        <SimulationControls
+          data={alarmData}
+          onUpdateParameters={handleUpdateParameters}
+          audioMuted={audioMuted}
+        />
 
-        {/* 3. Alarm Reasons / Triggers */}
-        <AlarmReasons data={alarmData} />
+        {/* Tab 1: Main Dashboard */}
+        {activeTab === 'dashboard' && (
+          <div className="space-y-6">
+            
+            {/* Top Metric Cards Row (pH, TDS, Turbidity, Temp) */}
+            <ParameterGrid parameters={alarmData.parameters} />
 
-        {/* 4. Core Water Quality Parameters */}
-        <ParameterGrid parameters={alarmData.parameters} />
+            {/* 24-Hour TDS & pH Trend Chart */}
+            <TrendChart
+              history={alarmData.trendHistory}
+              currentTds={alarmData.parameters.tds}
+              currentPh={alarmData.parameters.ph}
+            />
 
-        {/* 5. Purification Status */}
-        <PurificationStatus purification={alarmData.purification} />
+            {/* Bottom Widgets Row (Villages Monitored & System Status) */}
+            <div className="flex flex-col md:flex-row gap-6">
+              <VillagesWidget stats={alarmData.villageStats} />
+              <SystemStatusWidget stats={alarmData.systemStatusStats} />
+            </div>
 
-        {/* 6 & 7. Alert Actions & Timestamp */}
-        <AlertActions actions={alarmData.actions} data={alarmData} />
+          </div>
+        )}
+
+        {/* Tab 2: Detailed Alerts & Alarm Triggers */}
+        {activeTab === 'alerts' && (
+          <div className="space-y-6">
+            <AlarmReasons data={alarmData} />
+            <PurificationStatus purification={alarmData.purification} />
+            <AlertActions actions={alarmData.actions} data={alarmData} />
+          </div>
+        )}
+
+        {/* Tab 3: Device & Sensor Telemetry Status */}
+        {activeTab === 'devices' && (
+          <div className="space-y-6">
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-lg">
+              <h3 className="text-lg font-bold text-white mb-4">IoT Sensor & Kiosk Network Telemetry</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-800">
+                  <span className="text-xs text-slate-400 font-semibold">Optical Turbidity Sensor</span>
+                  <div className="text-lg font-bold text-slate-100 mt-1">TS-300B Optical Sensor</div>
+                  <span className="text-xs text-emerald-400 font-bold block mt-2">● Signal Strength: 98% (Online)</span>
+                </div>
+                <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-800">
+                  <span className="text-xs text-slate-400 font-semibold">TDS Probe Array</span>
+                  <div className="text-lg font-bold text-slate-100 mt-1">Analog TDS Sensor V1.0</div>
+                  <span className="text-xs text-emerald-400 font-bold block mt-2">● Calibrated (Online)</span>
+                </div>
+                <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-800">
+                  <span className="text-xs text-slate-400 font-semibold">pH Electrode Probe</span>
+                  <div className="text-lg font-bold text-slate-100 mt-1">Industrial Glass Electrode</div>
+                  <span className="text-xs text-emerald-400 font-bold block mt-2">● Sampling: Every 1 sec</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
       </main>
-
-      {/* Footer */}
-      <footer className="mt-auto border-t border-slate-900 py-6 text-center text-xs text-slate-400">
-        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-emerald-400" />
-            <span className="font-semibold text-slate-300">JalRakshak — Smart Water Box Safety System</span>
-          </div>
-          <div className="flex items-center gap-4 text-slate-400">
-            <span>RAMNAGAR KIOSK UNIT #402</span>
-            <span>•</span>
-            <span className="flex items-center gap-1">
-              <LifeBuoy className="w-3.5 h-3.5" /> Prototype Demonstration
-            </span>
-          </div>
-        </div>
-      </footer>
 
     </div>
   );
