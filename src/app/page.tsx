@@ -12,7 +12,7 @@ import { AlarmReasons } from '@/components/AlarmReasons';
 import { PurificationStatus } from '@/components/PurificationStatus';
 import { AlertActions } from '@/components/AlertActions';
 import { WaterAlarmData, WaterParameters, INITIAL_WATER_DATA } from '@/types/alarm';
-import { speakMultilingualAlert, startSirenAudio, stopSirenAudio } from '@/utils/audioAlert';
+import { speakMultilingualMaleAlert, startSirenAudio, stopSirenAudio } from '@/utils/audioAlert';
 
 export default function Home() {
   const [alarmData, setAlarmData] = useState<WaterAlarmData>(INITIAL_WATER_DATA);
@@ -41,9 +41,9 @@ export default function Home() {
     const isUnsafe = triggers.length > 0;
     const newStatus: 'SAFE' | 'UNSAFE' = isUnsafe ? 'UNSAFE' : 'SAFE';
 
-    // Handle voice announcement on status change (Hindi, Urdu, English)
+    // Handle voice announcement on status change (Male P.A. Voice - Jharkhand Rural Public Address)
     if (prevStatusRef.current !== newStatus && !audioMuted) {
-      speakMultilingualAlert(newStatus);
+      speakMultilingualMaleAlert(newStatus);
       if (newStatus === 'UNSAFE') {
         startSirenAudio();
       } else {
@@ -115,9 +115,9 @@ export default function Home() {
               currentPh={alarmData.parameters.ph}
             />
 
-            {/* Bottom Widgets Row (Villages Monitored & System Status) */}
+            {/* Bottom Widgets Row (Village SMS Dispatch & System Status) */}
             <div className="flex flex-col md:flex-row gap-6">
-              <VillagesWidget stats={alarmData.villageStats} />
+              <VillagesWidget isUnsafe={alarmData.status === 'UNSAFE'} />
               <SystemStatusWidget stats={alarmData.systemStatusStats} />
             </div>
 
