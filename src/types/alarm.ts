@@ -56,9 +56,17 @@ export const SAFE_ALARM_PRESET: WaterAlarmData = {
   }
 };
 
-export const PARAMETER_LIMITS = {
+export interface ParameterConfig {
+  min?: number;
+  max: number;
+  unit: string;
+  label: string;
+  safeRange: string;
+}
+
+export const PARAMETER_LIMITS: Record<'ph' | 'tds' | 'turbidity' | 'temperature', ParameterConfig> = {
   ph: { min: 6.5, max: 8.5, unit: "", label: "pH Level", safeRange: "6.5 - 8.5" },
-  tds: { max: 500, unit: "ppm", label: "TDS (Total Dissolved Solids)", safeRange: "< 500 ppm" },
-  turbidity: { max: 5, unit: "NTU", label: "Turbidity", safeRange: "< 5 NTU" },
-  temperature: { max: 28, unit: "°C", label: "Water Temperature", safeRange: "< 28°C" }
+  tds: { min: 0, max: 500, unit: "ppm", label: "TDS (Total Dissolved Solids)", safeRange: "< 500 ppm" },
+  turbidity: { min: 0, max: 5, unit: "NTU", label: "Turbidity", safeRange: "< 5 NTU" },
+  temperature: { min: 0, max: 28, unit: "°C", label: "Water Temperature", safeRange: "< 28°C" }
 };
