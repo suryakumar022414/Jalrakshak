@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { Sliders, RefreshCw, Play, Pause, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { WaterAlarmData, WaterParameters } from '@/types/alarm';
-import { speakStatusAnnouncement, startSirenAudio, stopSirenAudio } from '@/utils/audioAlert';
+import { startSirenAudio, stopSirenAudio } from '@/utils/audioAlert';
 
 interface SimulationControlsProps {
   data: WaterAlarmData;
