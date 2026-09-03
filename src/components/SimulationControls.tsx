@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Sliders, RefreshCw, Play, Pause, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { Sliders, RefreshCw, Play, Pause, AlertTriangle, CheckCircle2, PlusCircle, Droplet } from 'lucide-react';
 import { WaterAlarmData, WaterParameters } from '@/types/alarm';
 import { startSirenAudio, stopSirenAudio } from '@/utils/audioAlert';
 
@@ -9,12 +9,14 @@ interface SimulationControlsProps {
   data: WaterAlarmData;
   onUpdateParameters: (newParams: WaterParameters) => void;
   audioMuted: boolean;
+  onDispense10L?: () => void;
 }
 
 export const SimulationControls: React.FC<SimulationControlsProps> = ({
   data,
   onUpdateParameters,
-  audioMuted
+  audioMuted,
+  onDispense10L
 }) => {
   const [autoStream, setAutoStream] = useState(false);
 
@@ -63,7 +65,18 @@ export const SimulationControls: React.FC<SimulationControlsProps> = ({
           <h3 className="font-bold text-slate-100 text-base">Real-Time Telemetry Simulator</h3>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          {/* 10L Dispense Simulator Button */}
+          {onDispense10L && (
+            <button
+              onClick={onDispense10L}
+              className="px-3 py-1.5 rounded-lg bg-cyan-950/80 border border-cyan-800 text-cyan-300 text-xs font-bold hover:bg-cyan-900 transition-all flex items-center gap-1.5 active:scale-95"
+            >
+              <Droplet className="w-3.5 h-3.5 text-cyan-400" />
+              <span>[ +10L Dispense ]</span>
+            </button>
+          )}
+
           {/* Preset Buttons */}
           <button
             onClick={triggerUnsafePreset}

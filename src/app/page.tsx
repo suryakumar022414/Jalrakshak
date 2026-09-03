@@ -11,6 +11,8 @@ import { SimulationControls } from '@/components/SimulationControls';
 import { AlarmReasons } from '@/components/AlarmReasons';
 import { PurificationStatus } from '@/components/PurificationStatus';
 import { AlertActions } from '@/components/AlertActions';
+import { FilterHealthTracker } from '@/components/FilterHealthTracker';
+import { CommunityWaterDispenser } from '@/components/CommunityWaterDispenser';
 import { WaterAlarmData, WaterParameters, INITIAL_WATER_DATA } from '@/types/alarm';
 import { speakMultilingualMaleAlert, startSirenAudio, stopSirenAudio } from '@/utils/audioAlert';
 
@@ -18,8 +20,14 @@ export default function Home() {
   const [alarmData, setAlarmData] = useState<WaterAlarmData>(INITIAL_WATER_DATA);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'alerts' | 'devices'>('dashboard');
   const [audioMuted, setAudioMuted] = useState(false);
+  const [litersPurifiedToday, setLitersPurifiedToday] = useState(1420);
+  const [dailyTarget] = useState(2000);
 
   const prevStatusRef = useRef<'SAFE' | 'UNSAFE'>('SAFE');
+
+  const handleDispense10L = () => {
+    setLitersPurifiedToday(prev => prev + 10);
+  };
 
   // Dynamic evaluation whenever parameters change
   const handleUpdateParameters = (newParams: WaterParameters) => {
@@ -99,14 +107,28 @@ export default function Home() {
           data={alarmData}
           onUpdateParameters={handleUpdateParameters}
           audioMuted={audioMuted}
+          onDispense10L={handleDispense10L}
         />
 
         {/* Tab 1: Main Dashboard */}
         {activeTab === 'dashboard' && (
           <div className="space-y-6">
             
-            {/* Top Metric Cards Row (pH, TDS, Turbidity, Temp) */}
+            {/* Top Metric Cards Row (pH, TDS, Turbidity, Temp, Mining Risk Card) */}
             <ParameterGrid parameters={alarmData.parameters} />
+
+            {/* Community Water Dispenser & Filter Health Row */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <CommunityWaterDispenser
+                litersPurifiedToday={litersPurifiedToday}
+                dailyTarget={dailyTarget}
+                onDispense10L={handleDispense10L}
+              />
+              <FilterHealthTracker
+                parameters={alarmData.parameters}
+                operatingHours={240}
+              />
+            </div>
 
             {/* 24-Hour TDS & pH Trend Chart */}
             <TrendChart

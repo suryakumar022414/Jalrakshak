@@ -1,8 +1,9 @@
 'use client';
 
 import React from 'react';
-import { CheckCircle2, ShieldAlert, Bell, Settings, User } from 'lucide-react';
+import { CheckCircle2, ShieldAlert, Bell, Settings, User, Volume2 } from 'lucide-react';
 import { WaterAlarmData } from '@/types/alarm';
+import { playHindiVoiceAlert } from '@/utils/audioAlert';
 
 interface StatusBannerProps {
   data: WaterAlarmData;
@@ -10,6 +11,11 @@ interface StatusBannerProps {
 
 export const StatusBanner: React.FC<StatusBannerProps> = ({ data }) => {
   const isUnsafe = data.status === 'UNSAFE';
+
+  const handleAudioClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    playHindiVoiceAlert(data.status);
+  };
 
   return (
     <div className="w-full space-y-4">
@@ -36,7 +42,7 @@ export const StatusBanner: React.FC<StatusBannerProps> = ({ data }) => {
       </div>
 
       {/* Main Status Pill Banner (Exact Layout match from Reference Image) */}
-      <div className={`w-full py-4 px-6 rounded-full flex items-center justify-center gap-3 text-lg sm:text-xl font-black tracking-wide shadow-lg transition-all duration-500 ${
+      <div className={`w-full py-4 px-6 rounded-full flex flex-wrap items-center justify-center gap-3 text-lg sm:text-xl font-black tracking-wide shadow-lg transition-all duration-500 ${
         isUnsafe
           ? 'bg-gradient-to-r from-red-700 via-red-600 to-red-800 text-white shadow-red-950/60 ring-2 ring-red-500/50 animate-pulse'
           : 'bg-emerald-800 text-white shadow-emerald-950/40 ring-1 ring-emerald-600/40'
@@ -52,6 +58,16 @@ export const StatusBanner: React.FC<StatusBannerProps> = ({ data }) => {
             <span>WATER STATUS: SAFE</span>
           </>
         )}
+
+        {/* Multilingual Voice Alert Button (Hindi Audio Trigger for Village Illiteracy Accessibility) */}
+        <button
+          onClick={handleAudioClick}
+          title="Play Hindi Voice Alert / DFPlayer Mini Audio Announcement"
+          className="ml-2 p-2 rounded-full bg-slate-950/40 hover:bg-slate-950/70 border border-white/20 text-white transition-all transform hover:scale-110 flex items-center gap-1.5 text-xs font-bold shrink-0"
+        >
+          <Volume2 className="w-5 h-5 text-amber-300 animate-pulse" />
+          <span className="hidden sm:inline text-amber-200">🔊 हिंदी (Voice Alert)</span>
+        </button>
       </div>
 
     </div>

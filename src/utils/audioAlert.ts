@@ -112,6 +112,45 @@ export const speakMultilingualMaleAlert = (status: 'UNSAFE' | 'SAFE') => {
   }
 };
 
+/**
+ * Audio / Voice alert simulator for illiteracy accessibility in rural villages (DFPlayer Mini simulation).
+ * Triggers exact Hindi voice output:
+ * Safe: "पानी पीने के लिए सुरक्षित है।"
+ * Unsafe: "चेतावनी! पानी असुरक्षित है, कृपया प्रतीक्षा करें।"
+ */
+export const playHindiVoiceAlert = (status: 'UNSAFE' | 'SAFE') => {
+  if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
+    return;
+  }
+
+  try {
+    playPAChime();
+    window.speechSynthesis.cancel();
+
+    const hindiText = status === 'SAFE'
+      ? "पानी पीने के लिए सुरक्षित है।"
+      : "चेतावनी! पानी असुरक्षित है, कृपया प्रतीक्षा करें।";
+
+    const utterance = new SpeechSynthesisUtterance(hindiText);
+    utterance.lang = 'hi-IN';
+    utterance.pitch = 0.9;
+    utterance.rate = 0.85;
+    utterance.volume = 1.0;
+
+    const voices = window.speechSynthesis.getVoices();
+    const hindiVoice = voices.find(v => v.lang.includes('hi') || v.name.toLowerCase().includes('hindi') || v.lang.includes('IN'));
+    if (hindiVoice) {
+      utterance.voice = hindiVoice;
+    }
+
+    setTimeout(() => {
+      window.speechSynthesis.speak(utterance);
+    }, 350);
+  } catch (e) {
+    console.warn('Hindi voice alert error:', e);
+  }
+};
+
 export const startSirenAudio = () => {
   if (typeof window === 'undefined') return;
 
