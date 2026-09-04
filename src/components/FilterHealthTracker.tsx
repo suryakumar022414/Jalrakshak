@@ -25,8 +25,8 @@ export const FilterHealthTracker: React.FC<FilterHealthTrackerProps> = ({
     },
     {
       stage: 'Stage 2',
-      name: 'Activated Carbon / Alumina',
-      description: 'Fluoride, Heavy Metal & Odor Absorption',
+      name: 'Activated Alumina & Bio-Adsorbent (Rice Husk Ash)',
+      description: 'Sustainable Heavy Metal & Fluoride Filtration Media',
       val: health.carbon
     },
     {

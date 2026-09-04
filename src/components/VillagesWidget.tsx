@@ -77,8 +77,8 @@ export const VillagesWidget: React.FC<VillagesWidgetProps> = ({ isUnsafe = false
           </div>
           <p className={`font-mono leading-relaxed ${isUnsafe ? 'text-red-300 font-bold' : 'text-slate-400'}`}>
             {isUnsafe
-              ? '"ALERT: Water at Kiosk #12 is UNSAFE (TDS 720, Turbidity 45). Do NOT drink. Inform villagers immediately. — JalRakshak"'
-              : '"NOTICE: Water at Kiosk #12 is tested SAFE for drinking. — JalRakshak"'}
+              ? '"EMERGENCY: High Heavy Metal Runoff detected at Kiosk #12. Solenoid Tap LOCKED. - JalRakshak"'
+              : '"NOTICE: Water at Kiosk #12 is tested SAFE for drinking. - JalRakshak"'}
           </p>
         </div>
       </div>

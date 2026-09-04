@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Sidebar } from '@/components/Sidebar';
+import { Header } from '@/components/Header';
 import { StatusBanner } from '@/components/StatusBanner';
 import { ParameterGrid } from '@/components/ParameterGrid';
 import { TrendChart } from '@/components/TrendChart';
@@ -99,7 +100,10 @@ export default function Home() {
       {/* 2. Main Dashboard Area */}
       <main className="flex-1 p-4 sm:p-6 md:p-8 space-y-6 max-w-7xl mx-auto w-full overflow-hidden">
         
-        {/* Top Header & Status Banner matching user image */}
+        {/* Top Header Bar with LoRaWAN Telemetry Indicator */}
+        <Header data={alarmData} />
+
+        {/* Status Banner with MagicRings WebGL Animation */}
         <StatusBanner data={alarmData} />
 
         {/* Dynamic Telemetry Simulator Controls */}

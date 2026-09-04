@@ -1,6 +1,6 @@
 'use client';
 import React from 'react';
-import { Droplet, MapPin, Clock, ShieldAlert, ShieldCheck } from 'lucide-react';
+import { Droplet, MapPin, Clock, ShieldAlert, ShieldCheck, Radio } from 'lucide-react';
 import { WaterAlarmData } from '@/types/alarm';
 
 interface HeaderProps {
@@ -63,6 +63,14 @@ export const Header: React.FC<HeaderProps> = ({ data }) => {
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 border border-slate-700/60 text-slate-300">
             <Clock className="w-4 h-4 text-slate-400 shrink-0" />
             <span>{formatDate(data.timestamp)}</span>
+          </div>
+
+          {/* LoRaWAN Telemetry Protocol Badge */}
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-indigo-950/50 border border-indigo-500/50 text-indigo-200">
+            <Radio className="w-4 h-4 text-indigo-400 shrink-0 animate-pulse" />
+            <span className="font-semibold text-xs">
+              Connectivity: <strong className="text-white font-bold">LoRaWAN (Primary) | GSM Fallback</strong>
+            </span>
           </div>
 
           {/* Quick System Badge */}
