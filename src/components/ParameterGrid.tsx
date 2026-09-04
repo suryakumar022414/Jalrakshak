@@ -7,9 +7,10 @@ import { Sliders } from 'lucide-react';
 
 interface ParameterGridProps {
   parameters: WaterParameters;
+  isApiConnected?: boolean;
 }
 
-export const ParameterGrid: React.FC<ParameterGridProps> = ({ parameters }) => {
+export const ParameterGrid: React.FC<ParameterGridProps> = ({ parameters, isApiConnected = false }) => {
   return (
     <div className="space-y-4">
       {/* Section Header */}
@@ -23,7 +24,7 @@ export const ParameterGrid: React.FC<ParameterGridProps> = ({ parameters }) => {
         <ParameterCard paramKey="ph" value={parameters.ph} />
         <ParameterCard paramKey="tds" value={parameters.tds} />
         <ParameterCard paramKey="turbidity" value={parameters.turbidity} />
-        <ParameterCard paramKey="temperature" value={parameters.temperature} />
+        <ParameterCard paramKey="temperature" value={parameters.temperature} isApiConnected={isApiConnected} />
         <MiningRiskCard parameters={parameters} />
       </div>
     </div>

@@ -7,9 +7,10 @@ import { PARAMETER_LIMITS } from '@/types/alarm';
 interface ParameterCardProps {
   paramKey: 'ph' | 'tds' | 'turbidity' | 'temperature';
   value: number;
+  isApiConnected?: boolean;
 }
 
-export const ParameterCard: React.FC<ParameterCardProps> = ({ paramKey, value }) => {
+export const ParameterCard: React.FC<ParameterCardProps> = ({ paramKey, value, isApiConnected = false }) => {
   const config = PARAMETER_LIMITS[paramKey];
 
   let isConcerning = false;
@@ -45,11 +46,23 @@ export const ParameterCard: React.FC<ParameterCardProps> = ({ paramKey, value })
     }`}>
       
       {/* Title & Icon */}
-      <div className="flex items-center gap-2 mb-3 text-slate-300">
-        <div className={`p-2 rounded-xl ${isConcerning ? 'bg-red-500/20 text-red-400' : 'bg-emerald-500/20 text-emerald-400'}`}>
-          {renderIcon()}
+      <div className="flex items-center justify-between gap-2 mb-3">
+        <div className="flex items-center gap-2 text-slate-300">
+          <div className={`p-2 rounded-xl ${isConcerning ? 'bg-red-500/20 text-red-400' : 'bg-emerald-500/20 text-emerald-400'}`}>
+            {renderIcon()}
+          </div>
+          <span className="font-semibold text-sm">{config.label}</span>
         </div>
-        <span className="font-semibold text-sm">{config.label}</span>
+
+        {paramKey === 'temperature' && (
+          <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded border ${
+            isApiConnected
+              ? 'bg-cyan-950/90 text-cyan-300 border-cyan-700 animate-pulse'
+              : 'bg-slate-800/80 text-slate-400 border-slate-700'
+          }`}>
+            {isApiConnected ? '● Port 5000 API' : '● Mock Data'}
+          </span>
+        )}
       </div>
 
       {/* Large Value Display */}
@@ -65,11 +78,17 @@ export const ParameterCard: React.FC<ParameterCardProps> = ({ paramKey, value })
       </div>
 
       {/* Status Dot (Exact layout match with user's screenshot: • Safe / • Unsafe) */}
-      <div className="flex items-center gap-2 mt-3 pt-2 border-t border-slate-800/80 text-xs font-bold">
-        <span className={`w-2 h-2 rounded-full ${isConcerning ? 'bg-red-500 animate-ping' : 'bg-emerald-400'}`} />
-        <span className={isConcerning ? 'text-red-400' : 'text-emerald-400'}>
-          {isConcerning ? '• Unsafe (Threshold Exceeded)' : '• Safe'}
-        </span>
+      <div className="flex items-center justify-between gap-2 mt-3 pt-2 border-t border-slate-800/80 text-xs font-bold">
+        <div className="flex items-center gap-1.5">
+          <span className={`w-2 h-2 rounded-full ${isConcerning ? 'bg-red-500 animate-ping' : 'bg-emerald-400'}`} />
+          <span className={isConcerning ? 'text-red-400' : 'text-emerald-400'}>
+            {isConcerning ? '• Unsafe (High Temp)' : '• Safe'}
+          </span>
+        </div>
+
+        {paramKey === 'temperature' && isApiConnected && (
+          <span className="text-[10px] text-cyan-400 font-mono">Live API Data</span>
+        )}
       </div>
 
     </div>

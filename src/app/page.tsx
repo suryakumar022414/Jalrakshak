@@ -23,12 +23,121 @@ export default function Home() {
   const [audioMuted, setAudioMuted] = useState(false);
   const [litersPurifiedToday, setLitersPurifiedToday] = useState(1420);
   const [dailyTarget] = useState(2000);
+  const [isApiConnected, setIsApiConnected] = useState(false);
 
   const prevStatusRef = useRef<'SAFE' | 'UNSAFE'>('SAFE');
 
   const handleDispense10L = () => {
     setLitersPurifiedToday(prev => prev + 10);
   };
+
+  // Real-time ESP32 temperature fetcher (polling http://192.168.1.10:5000/api/data with fallback)
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchTemperatureFromApi = async () => {
+      try {
+        const controller = new AbortController();
+
+        const timeoutId = setTimeout(() => {
+          controller.abort();
+        }, 1800);
+
+        let response: Response | null = null;
+
+        try {
+          response = await fetch(
+            'http://192.168.1.10:5000/api/data',
+            {
+              signal: controller.signal,
+              cache: 'no-store'
+            }
+          );
+        } catch {
+          try {
+            response = await fetch(
+              'http://localhost:5000/api/data',
+              {
+                signal: controller.signal,
+                cache: 'no-store'
+              }
+            );
+          } catch {
+            response = null;
+          }
+        }
+
+        clearTimeout(timeoutId);
+
+        if (!response || !response.ok) {
+          if (isMounted) setIsApiConnected(false);
+          return;
+        }
+
+        const json = await response.json();
+
+        console.log("ESP32 data:", json);
+
+        const fetchedTemp =
+          json.temperature ??
+          json.temp ??
+          json.data?.temperature ??
+          json.data?.temp ??
+          json.parameters?.temperature ??
+          json.value;
+
+        if (
+          typeof fetchedTemp === 'number' &&
+          !isNaN(fetchedTemp) &&
+          isMounted
+        ) {
+          setIsApiConnected(true);
+
+          setAlarmData(prev => {
+            const updatedParams = {
+              ...prev.parameters,
+              temperature: fetchedTemp
+            };
+
+            handleUpdateParameters(updatedParams);
+
+            return {
+              ...prev,
+              parameters: updatedParams
+            };
+          });
+
+          return;
+        }
+
+        if (isMounted) {
+          setIsApiConnected(false);
+        }
+
+      } catch (error) {
+        console.error("Temperature API error:", error);
+
+        if (isMounted) {
+          setIsApiConnected(false);
+        }
+      }
+    };
+
+    // Fetch immediately
+    fetchTemperatureFromApi();
+
+    // Fetch every 2 seconds
+    const interval = setInterval(
+      fetchTemperatureFromApi,
+      2000
+    );
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+
+  }, []);
 
   // Dynamic evaluation whenever parameters change
   const handleUpdateParameters = (newParams: WaterParameters) => {
@@ -119,7 +228,7 @@ export default function Home() {
           <div className="space-y-6">
             
             {/* Top Metric Cards Row (pH, TDS, Turbidity, Temp, Mining Risk Card) */}
-            <ParameterGrid parameters={alarmData.parameters} />
+            <ParameterGrid parameters={alarmData.parameters} isApiConnected={isApiConnected} />
 
             {/* Community Water Dispenser & Filter Health Row */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
