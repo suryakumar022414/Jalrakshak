@@ -60,18 +60,18 @@ export const speakMultilingualMaleAlert = (status: 'UNSAFE' | 'SAFE') => {
       v.lang.includes('hi') || v.name.toLowerCase().includes('hindi') || v.lang.includes('IN')
     );
 
-    // Text tailored to guarantee audible Hindi on all systems
+    // 1. English Announcement
     const englishText = status === 'UNSAFE'
-      ? "Warning! Water status is UNSAFE and contaminated. You MUST NOT drink this water. High risk individuals must not drink this water!"
+      ? "Caution! Water status is UNSAFE and contaminated. You MUST NOT drink this water. High risk individuals must not drink this water!"
       : "Attention! Water is SAFE and within screening range. You can drink this water! Healthy adults and community members can safely drink this water.";
 
-    // If native Hindi TTS voice is available, use Devanagari; otherwise use Phonetic Hinglish so English TTS speaks Hindi words aloud clearly!
+    // 2. Clear Hindi Announcement (with phonetic fallback so every browser TTS voice speaks Hindi words aloud!)
     const hindiText = status === 'UNSAFE'
       ? (hindiVoice
-          ? "सावधान! पानी दूषित और असुरक्षित है। आप यह पानी बिल्कुल न पिएं! छोटे बच्चे, गर्भवती महिलाएँ, बुजुर्ग और बीमार लोग यह पानी न पिएं!"
+          ? "सावधान! पानी दूषित और असुरक्षित है। आप यह पानी बिल्कुल न पिएं! छोटे बच्चे, गर्भवती महिलाएँ, बुजुर्ग और बीमार लोग यह पानी बिल्कुल न पिएं!"
           : "Chetaavni! Yeh paani unsafe aur contaminated hai! Aap yeh paani bilkul mat pijiye! Children, pregnant women, elderly, and sick people must not drink this water!")
       : (hindiVoice
-          ? "सूचना! पानी पीने के लिए बिल्कुल सुरक्षित है। आप यह पानी पी सकते हैं! सभी स्वस्थ लोग और ग्रामीण यह पानी सुरक्षित रूप से पी सकते हैं।"
+          ? "सूचना! पानी पीने के लिए बिल्कुल सुरक्षित है। आप यह पानी पी सकते हैं! सभी लोग और ग्रामीण यह पानी सुरक्षित रूप से पी सकते हैं।"
           : "Soochna! Water is safe! Aap yeh paani peesakte hain! Yeh paani peene ke liye bilkul safe hai! All healthy people can drink this water.");
 
     // Create English Utterance
@@ -92,15 +92,36 @@ export const speakMultilingualMaleAlert = (status: 'UNSAFE' | 'SAFE') => {
     if (engVoice) engUtterance.voice = engVoice;
     if (hindiVoice) hiUtterance.voice = hindiVoice;
 
-    // Speak English first, then Hindi announcement
+    let hindiSpoken = false;
+
+    const speakHindiPart = () => {
+      if (hindiSpoken) return;
+      hindiSpoken = true;
+      try {
+        window.speechSynthesis.speak(hiUtterance);
+      } catch (err) {
+        console.warn("Error playing Hindi utterance:", err);
+      }
+    };
+
+    // Chain Hindi announcement to play EXACTLY when English speech completes!
+    engUtterance.onend = () => {
+      speakHindiPart();
+    };
+
+    engUtterance.onerror = () => {
+      speakHindiPart();
+    };
+
+    // Fallback timer in case Chrome onend event drops
     setTimeout(() => {
       window.speechSynthesis.speak(engUtterance);
-      
-      // Small pause before Hindi utterance
-      setTimeout(() => {
-        window.speechSynthesis.speak(hiUtterance);
-      }, 250);
-    }, 400);
+    }, 350);
+
+    // Backup safety trigger for Hindi if onend doesn't fire after 5 seconds
+    setTimeout(() => {
+      speakHindiPart();
+    }, 5500);
 
   } catch (e) {
     console.warn('Speech synthesis error:', e);
