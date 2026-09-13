@@ -55,38 +55,51 @@ export const speakMultilingualMaleAlert = (status: 'UNSAFE' | 'SAFE') => {
     playPAChime();
     window.speechSynthesis.cancel();
 
-    // English Announcement first, followed immediately by Hindi Announcement
+    const voices = window.speechSynthesis.getVoices();
+    const hindiVoice = voices.find(v => 
+      v.lang.includes('hi') || v.name.toLowerCase().includes('hindi') || v.lang.includes('IN')
+    );
+
+    // Text tailored to guarantee audible Hindi on all systems
     const englishText = status === 'UNSAFE'
-      ? "Warning! Water status is UNSAFE! High risk detected. Infants, pregnant individuals, older adults, and immunocompromised people MUST NOT drink this water."
-      : "Attention! Water parameters are safe and within screening range. High-risk groups should continue using verified treated water.";
+      ? "Warning! Water status is UNSAFE and contaminated. You MUST NOT drink this water. High risk individuals must not drink this water!"
+      : "Attention! Water is SAFE and within screening range. You can drink this water! Healthy adults and community members can safely drink this water.";
 
+    // If native Hindi TTS voice is available, use Devanagari; otherwise use Phonetic Hinglish so English TTS speaks Hindi words aloud clearly!
     const hindiText = status === 'UNSAFE'
-      ? "सावधान! पानी असुरक्षित है। छोटे बच्चे, गर्भवती महिलाएँ, बुजुर्ग और बीमार लोग यह पानी बिल्कुल न पिएं।"
-      : "सूचना! पानी की जाँच सामान्य और सुरक्षित है।";
+      ? (hindiVoice
+          ? "सावधान! पानी दूषित और असुरक्षित है। आप यह पानी बिल्कुल न पिएं! छोटे बच्चे, गर्भवती महिलाएँ, बुजुर्ग और बीमार लोग यह पानी न पिएं!"
+          : "Chetaavni! Yeh paani unsafe aur contaminated hai! Aap yeh paani bilkul mat pijiye! Children, pregnant women, elderly, and sick people must not drink this water!")
+      : (hindiVoice
+          ? "सूचना! पानी पीने के लिए बिल्कुल सुरक्षित है। आप यह पानी पी सकते हैं! सभी स्वस्थ लोग और ग्रामीण यह पानी सुरक्षित रूप से पी सकते हैं।"
+          : "Soochna! Water is safe! Aap yeh paani peesakte hain! Yeh paani peene ke liye bilkul safe hai! All healthy people can drink this water.");
 
-    // First speak English
+    // Create English Utterance
     const engUtterance = new SpeechSynthesisUtterance(englishText);
     engUtterance.lang = 'en-US';
     engUtterance.pitch = 0.85;
     engUtterance.rate = 0.90;
     engUtterance.volume = 1.0;
 
-    // Second speak Hindi
+    // Create Hindi Utterance
     const hiUtterance = new SpeechSynthesisUtterance(hindiText);
-    hiUtterance.lang = 'hi-IN';
-    hiUtterance.pitch = 0.85;
-    hiUtterance.rate = 0.88;
+    hiUtterance.lang = hindiVoice ? 'hi-IN' : 'en-IN';
+    hiUtterance.pitch = 0.88;
+    hiUtterance.rate = 0.85;
     hiUtterance.volume = 1.0;
 
-    const voices = window.speechSynthesis.getVoices();
-    const hindiVoice = voices.find(v => v.lang.includes('hi') || v.name.toLowerCase().includes('hindi') || v.lang.includes('IN'));
-    if (hindiVoice) {
-      hiUtterance.voice = hindiVoice;
-    }
+    const engVoice = voices.find(v => v.lang.startsWith('en'));
+    if (engVoice) engUtterance.voice = engVoice;
+    if (hindiVoice) hiUtterance.voice = hindiVoice;
 
+    // Speak English first, then Hindi announcement
     setTimeout(() => {
       window.speechSynthesis.speak(engUtterance);
-      window.speechSynthesis.speak(hiUtterance);
+      
+      // Small pause before Hindi utterance
+      setTimeout(() => {
+        window.speechSynthesis.speak(hiUtterance);
+      }, 250);
     }, 400);
 
   } catch (e) {

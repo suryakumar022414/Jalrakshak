@@ -12,7 +12,8 @@ import {
   Users,
   ChevronDown,
   ChevronUp,
-  Info
+  Info,
+  Check
 } from 'lucide-react';
 import { WaterAlarmData } from '@/types/alarm';
 import { speakMultilingualMaleAlert } from '@/utils/audioAlert';
@@ -32,7 +33,7 @@ export const StatusBanner: React.FC<StatusBannerProps> = ({ data }) => {
   };
 
   const highRiskGroupsBilingual = [
-    { en: "Infants and young children", hi: "छोटे बच्चे" },
+    { en: "Infants and young children", hi: "छोटे बच्चे और शिशु" },
     { en: "Pregnant people", hi: "गर्भवती महिलाएँ" },
     { en: "Older adults", hi: "बुजुर्ग व्यक्ति" },
     { en: "Immunocompromised people", hi: "कमजोर प्रतिरक्षा वाले लोग" },
@@ -97,21 +98,21 @@ export const StatusBanner: React.FC<StatusBannerProps> = ({ data }) => {
             )}
             <div>
               <div className="text-xs font-extrabold uppercase tracking-widest text-slate-300">
-                Official Telemetry Status / आधिकारिक स्थिति
+                Official Telemetry Status / आधिकारिक जल सुरक्षा स्थिति
               </div>
               <div className="text-lg sm:text-xl font-black tracking-tight">
                 {isUnsafe ? (
                   <>
-                    <span>WATER STATUS: UNSAFE</span>
+                    <span>WATER STATUS: UNSAFE (DO NOT DRINK)</span>
                     <span className="block text-sm font-semibold text-red-300">
-                      जल स्थिति: असुरक्षित — पानी न पिएं (DO NOT DRINK)
+                      जल स्थिति: असुरक्षित — पानी न पिएं (DO NOT DRINK THIS WATER)
                     </span>
                   </>
                 ) : (
                   <>
-                    <span>WATER STATUS: SAFE</span>
+                    <span>WATER STATUS: SAFE — YOU CAN DRINK THIS WATER</span>
                     <span className="block text-sm font-semibold text-emerald-300">
-                      जल स्थिति: सुरक्षित — पानी पीने योग्य है
+                      जल स्थिति: सुरक्षित — आप यह पानी पी सकते हैं (YOU CAN DRINK THIS WATER)
                     </span>
                   </>
                 )}
@@ -125,7 +126,7 @@ export const StatusBanner: React.FC<StatusBannerProps> = ({ data }) => {
               className="p-2 rounded-xl bg-slate-900/80 hover:bg-slate-900 border border-slate-700 text-xs font-bold text-slate-200 flex items-center gap-1.5 transition-all"
             >
               <Users className="w-4 h-4 text-amber-400" />
-              <span>High-Risk Caution List / सावधानी सूची</span>
+              <span>Safety & Advisory Details / सुरक्षा विवरण</span>
               {showHighRiskList ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
             </button>
 
@@ -136,7 +137,7 @@ export const StatusBanner: React.FC<StatusBannerProps> = ({ data }) => {
               className="p-2.5 rounded-full bg-slate-950/70 hover:bg-slate-950/90 border border-white/30 text-white transition-all transform hover:scale-105 flex items-center gap-1.5 text-xs font-bold shrink-0 shadow-lg"
             >
               <Volume2 className="w-5 h-5 text-amber-300 animate-pulse" />
-              <span className="hidden sm:inline text-amber-200">🔊 Voice Alert (Eng + हिंदी)</span>
+              <span className="hidden sm:inline text-amber-200">🔊 Voice Alert (English + हिंदी)</span>
             </button>
           </div>
         </div>
@@ -148,27 +149,33 @@ export const StatusBanner: React.FC<StatusBannerProps> = ({ data }) => {
           className={`p-5 rounded-xl border transition-all duration-300 shadow-lg ${
             isUnsafe
               ? 'bg-red-950/40 border-red-800/80 text-red-100'
-              : 'bg-amber-950/30 border-amber-800/60 text-amber-100'
+              : 'bg-emerald-950/30 border-emerald-800/60 text-emerald-100'
           }`}
         >
           <div className="flex items-start gap-3">
-            <AlertTriangle className={`w-6 h-6 shrink-0 mt-0.5 ${isUnsafe ? 'text-red-400 animate-pulse' : 'text-amber-400'}`} />
+            {isUnsafe ? (
+              <AlertTriangle className="w-6 h-6 text-red-400 shrink-0 mt-0.5 animate-pulse" />
+            ) : (
+              <Check className="w-6 h-6 text-emerald-400 shrink-0 mt-0.5" />
+            )}
             <div className="space-y-3 w-full">
               
               {/* Header */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 border-b border-white/10 pb-2">
                 <div>
                   <h4 className="text-base font-extrabold tracking-wide flex items-center gap-2">
-                    <span>CAUTION ADVISORY / सावधानी चेतावनी:</span>
+                    <span>STATUS ADVISORY / सुरक्षा एवं सावधानी सलाह:</span>
                   </h4>
-                  <span className={`text-sm font-bold block ${isUnsafe ? 'text-red-300' : 'text-amber-300'}`}>
+                  <span className={`text-sm font-bold block ${isUnsafe ? 'text-red-300' : 'text-emerald-300'}`}>
                     {isUnsafe
                       ? 'DO NOT DRINK — WATER UNFIT FOR CONSUMPTION / यह पानी पीने के योग्य नहीं है'
-                      : 'RESTRICTED FOR HIGH-RISK GROUPS / संवेदनशील समूहों के लिए विशेष सावधानी'}
+                      : 'SAFE TO DRINK — You can drink this water! / आप यह पानी बेझिझक पी सकते हैं!'}
                   </span>
                 </div>
-                <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-slate-900/80 border border-white/10 text-amber-300 shrink-0">
-                  Vulnerable Groups / संवेदनशील वर्ग
+                <span className={`text-xs font-bold px-2.5 py-1 rounded-full bg-slate-900/80 border border-white/10 ${
+                  isUnsafe ? 'text-red-300' : 'text-emerald-300'
+                }`}>
+                  {isUnsafe ? 'Unsafe Alert / खतरा चेतावनी' : 'Safe Advisory / सुरक्षा सलाह'}
                 </span>
               </div>
 
@@ -176,42 +183,56 @@ export const StatusBanner: React.FC<StatusBannerProps> = ({ data }) => {
               <p className="text-xs sm:text-sm leading-relaxed text-slate-200 font-medium">
                 {isUnsafe ? (
                   <>
-                    <strong>⚠️ Caution Notice:</strong> The following people MUST NOT drink this water untreated / <strong>सावधान:</strong> निम्नलिखित लोग इस पानी को बिना उबाले या फिल्टर किए बिल्कुल न पिएं:
+                    <strong>⚠️ CAUTION:</strong> High contamination detected. The following people MUST NOT drink this water untreated:
+                    <br />
+                    <strong>सावधान:</strong> उच्च संदूषण जोखिम पाई गई है। निम्नलिखित लोग यह पानी बिना उबाले या फिल्टर किए बिल्कुल न पिएं:
                   </>
                 ) : (
                   <>
-                    <strong>ℹ️ Screening Caution:</strong> High-risk groups must continue taking extra precautions / <strong>सावधानी:</strong> सामान्य जांच सुरक्षित होने पर भी संवेदनशील वर्ग के लोग उबला हुआ पानी ही पिएं:
+                    <strong>✅ SAFE WATER NOTICE:</strong> All general community members, healthy adults, and residents can safely drink this water!
+                    <br />
+                    <strong>सुरक्षित जल सूचना:</strong> सभी नागरिक, गाँव के लोग और स्वस्थ व्यक्ति यह पानी सुरक्षित रूप से पी सकते हैं! (संवेदनशील वर्ग अतिरिक्त सुरक्षा हेतु उबला पानी पिएं।)
                   </>
                 )}
               </p>
 
-              {/* Bilingual High Risk People Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 text-xs font-semibold pt-1">
-                {highRiskGroupsBilingual.map((group, idx) => (
-                  <div
-                    key={idx}
-                    className={`p-2.5 rounded-lg border flex flex-col gap-0.5 ${
-                      isUnsafe
-                        ? 'bg-red-950/60 border-red-800/80 text-red-100'
-                        : 'bg-slate-900/80 border-slate-800 text-amber-200'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-amber-400 shrink-0" />
-                      <span className="font-bold text-white">{group.en}</span>
+              {/* High Risk People & Safety Grid */}
+              <div className="space-y-1.5">
+                <div className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+                  {isUnsafe
+                    ? 'People Who MUST NOT Drink This Water / ये लोग यह पानी बिल्कुल न पिएं:'
+                    : 'Extra-Caution Vulnerable Groups Notice / संवेदनशील वर्गों हेतु विशेष सूचना:'}
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 text-xs font-semibold pt-1">
+                  {highRiskGroupsBilingual.map((group, idx) => (
+                    <div
+                      key={idx}
+                      className={`p-2.5 rounded-lg border flex flex-col gap-0.5 ${
+                        isUnsafe
+                          ? 'bg-red-950/60 border-red-800/80 text-red-100'
+                          : 'bg-slate-900/80 border-slate-800 text-amber-200'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className={`w-2 h-2 rounded-full shrink-0 ${isUnsafe ? 'bg-red-400' : 'bg-amber-400'}`} />
+                        <span className="font-bold text-white">{group.en}</span>
+                      </div>
+                      <span className="text-[11px] text-amber-300/90 pl-4 font-normal">
+                        ({group.hi})
+                      </span>
                     </div>
-                    <span className="text-[11px] text-amber-300/90 pl-4 font-normal">
-                      ({group.hi})
-                    </span>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
 
               {/* Bottom Notice */}
               <div className="flex items-center gap-2 text-xs text-slate-300 pt-1 font-medium">
                 <Info className="w-4 h-4 text-sky-400 shrink-0" />
                 <span>
-                  Always use verified treated/boiled water or certified alternate sources during advisories. / जल चेतावनी के दौरान हमेशा उबले हुए या सुरक्षित पानी का ही उपयोग करें।
+                  {isUnsafe
+                    ? 'Always use verified treated/boiled water or certified alternate sources during advisories. / जल चेतावनी के दौरान हमेशा उबले हुए या सुरक्षित पानी का ही उपयोग करें।'
+                    : 'Water quality is continuously monitored by JalRakshak sensor network. / जल सुरक्षा की लगातार निगरानी सेंसर नेटवर्क द्वारा की जा रही है।'}
                 </span>
               </div>
             </div>
