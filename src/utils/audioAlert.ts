@@ -52,59 +52,41 @@ export const speakMultilingualMaleAlert = (status: 'UNSAFE' | 'SAFE') => {
   }
 
   try {
-    // Play village loudspeaker P.A. chime
     playPAChime();
-
-    // Cancel any ongoing speech
     window.speechSynthesis.cancel();
 
-    // Phrasing tailored for rural & mining kiosk public address in Jharkhand
-    const phrases = status === 'UNSAFE'
-      ? [
-          "सावधान! ध्यान दें। यह पानी दूषित है और पीने के लिए सुरक्षित नहीं है। कृपया पानी न पिएं।",
-          "Khabardaar! Yeh paani peene ke laayaq nahi hai. Sehat ke liye khatarnaak hai.",
-          "Danger! Water is contaminated and unsafe for drinking. Do not use!"
-        ]
-      : [
-          "सूचना! पानी की जाँच पूरी हो चुकी है। यह पानी साफ़ और पीने के लिए बिल्कुल सुरक्षित है।",
-          "Soochna! Yeh paani bilkul saaf aur mahfooz hai.",
-          "Notice! Water parameters are normal. Water is safe for drinking."
-        ];
+    // English Announcement first, followed immediately by Hindi Announcement
+    const englishText = status === 'UNSAFE'
+      ? "Warning! Water status is UNSAFE! High risk detected. Infants, pregnant individuals, older adults, and immunocompromised people MUST NOT drink this water."
+      : "Attention! Water parameters are safe and within screening range. High-risk groups should continue using verified treated water.";
 
-    const fullText = phrases.join(" ... ");
-    const utterance = new SpeechSynthesisUtterance(fullText);
+    const hindiText = status === 'UNSAFE'
+      ? "सावधान! पानी असुरक्षित है। छोटे बच्चे, गर्भवती महिलाएँ, बुजुर्ग और बीमार लोग यह पानी बिल्कुल न पिएं।"
+      : "सूचना! पानी की जाँच सामान्य और सुरक्षित है।";
 
-    // Male voice settings: lower pitch (0.75 - 0.82) gives an authoritative, deep male public-address voice
-    utterance.pitch = 0.80; // Deep male pitch
-    utterance.rate = 0.88;  // Clear, deliberate pace for rural loudspeakers
-    utterance.volume = 1.0;
+    // First speak English
+    const engUtterance = new SpeechSynthesisUtterance(englishText);
+    engUtterance.lang = 'en-US';
+    engUtterance.pitch = 0.85;
+    engUtterance.rate = 0.90;
+    engUtterance.volume = 1.0;
 
-    // Search for explicit Hindi / Male voices available in browser
+    // Second speak Hindi
+    const hiUtterance = new SpeechSynthesisUtterance(hindiText);
+    hiUtterance.lang = 'hi-IN';
+    hiUtterance.pitch = 0.85;
+    hiUtterance.rate = 0.88;
+    hiUtterance.volume = 1.0;
+
     const voices = window.speechSynthesis.getVoices();
-    
-    // Priority search for Male / Hindi / Indian voices
-    const maleHindiVoice = voices.find(v => 
-      (v.lang.includes('hi') || v.lang.includes('IN') || v.name.toLowerCase().includes('hindi')) &&
-      (v.name.toLowerCase().includes('male') || v.name.toLowerCase().includes('hemant') || v.name.toLowerCase().includes('karan') || v.name.toLowerCase().includes('ravi') || v.name.toLowerCase().includes('google'))
-    );
-
-    const genericMaleVoice = voices.find(v =>
-      v.name.toLowerCase().includes('male') || v.name.toLowerCase().includes('david') || v.name.toLowerCase().includes('mark') || v.name.toLowerCase().includes('george')
-    );
-
-    const hindiVoice = voices.find(v => v.lang.startsWith('hi') || v.lang.includes('IN'));
-
-    if (maleHindiVoice) {
-      utterance.voice = maleHindiVoice;
-    } else if (genericMaleVoice) {
-      utterance.voice = genericMaleVoice;
-    } else if (hindiVoice) {
-      utterance.voice = hindiVoice;
+    const hindiVoice = voices.find(v => v.lang.includes('hi') || v.name.toLowerCase().includes('hindi') || v.lang.includes('IN'));
+    if (hindiVoice) {
+      hiUtterance.voice = hindiVoice;
     }
 
-    // Delay slightly for P.A. chime to complete
     setTimeout(() => {
-      window.speechSynthesis.speak(utterance);
+      window.speechSynthesis.speak(engUtterance);
+      window.speechSynthesis.speak(hiUtterance);
     }, 400);
 
   } catch (e) {
@@ -112,43 +94,8 @@ export const speakMultilingualMaleAlert = (status: 'UNSAFE' | 'SAFE') => {
   }
 };
 
-/**
- * Audio / Voice alert simulator for illiteracy accessibility in rural villages (DFPlayer Mini simulation).
- * Triggers exact Hindi voice output:
- * Safe: "पानी पीने के लिए सुरक्षित है।"
- * Unsafe: "चेतावनी! पानी असुरक्षित है, कृपया प्रतीक्षा करें।"
- */
 export const playHindiVoiceAlert = (status: 'UNSAFE' | 'SAFE') => {
-  if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
-    return;
-  }
-
-  try {
-    playPAChime();
-    window.speechSynthesis.cancel();
-
-    const hindiText = status === 'SAFE'
-      ? "पानी पीने के लिए सुरक्षित है।"
-      : "चेतावनी! पानी असुरक्षित है, कृपया प्रतीक्षा करें।";
-
-    const utterance = new SpeechSynthesisUtterance(hindiText);
-    utterance.lang = 'hi-IN';
-    utterance.pitch = 0.9;
-    utterance.rate = 0.85;
-    utterance.volume = 1.0;
-
-    const voices = window.speechSynthesis.getVoices();
-    const hindiVoice = voices.find(v => v.lang.includes('hi') || v.name.toLowerCase().includes('hindi') || v.lang.includes('IN'));
-    if (hindiVoice) {
-      utterance.voice = hindiVoice;
-    }
-
-    setTimeout(() => {
-      window.speechSynthesis.speak(utterance);
-    }, 350);
-  } catch (e) {
-    console.warn('Hindi voice alert error:', e);
-  }
+  speakMultilingualMaleAlert(status);
 };
 
 export const startSirenAudio = () => {
@@ -165,7 +112,7 @@ export const startSirenAudio = () => {
     }
 
     if (sirenOscillator) {
-      return; // Already playing
+      return;
     }
 
     const osc = audioCtx.createOscillator();
