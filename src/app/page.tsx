@@ -17,6 +17,8 @@ import { CommunityWaterDispenser } from '@/components/CommunityWaterDispenser';
 import { WaterAlarmData, WaterParameters, INITIAL_WATER_DATA } from '@/types/alarm';
 import { speakMultilingualMaleAlert, startSirenAudio, stopSirenAudio } from '@/utils/audioAlert';
 
+import { WaterSafetyAdvisory } from '@/components/WaterSafetyAdvisory';
+
 export default function Home() {
   const [alarmData, setAlarmData] = useState<WaterAlarmData>(INITIAL_WATER_DATA);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'alerts' | 'devices'>('dashboard');
@@ -229,6 +231,12 @@ export default function Home() {
             
             {/* Top Metric Cards Row (pH, TDS, Turbidity, Temp, Mining Risk Card) */}
             <ParameterGrid parameters={alarmData.parameters} isApiConnected={isApiConnected} />
+
+            {/* Water Safety & Health Advisory Section */}
+            <WaterSafetyAdvisory
+              parameters={alarmData.parameters}
+              purification={alarmData.purification}
+            />
 
             {/* Community Water Dispenser & Filter Health Row */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
