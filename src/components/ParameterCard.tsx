@@ -70,7 +70,7 @@ export const ParameterCard: React.FC<ParameterCardProps> = ({ paramKey, value, i
         <span className={`text-4xl sm:text-5xl font-extrabold tracking-tight ${
           isConcerning ? 'text-red-400' : 'text-slate-100'
         }`}>
-          {value}
+          {typeof value === 'number' ? Math.round(value * 100) / 100 : value}
         </span>
         {config.unit && (
           <span className="text-base font-bold text-slate-400">{config.unit}</span>

@@ -33,7 +33,17 @@ export default function Home() {
     setLitersPurifiedToday(prev => prev + 10);
   };
 
-  // Real-time ESP32 temperature fetcher (polling http://192.168.1.10:5000/api/data with fallback)
+  // Helper to parse numeric values from API (handles floats, integers, and numeric strings)
+  const parseVal = (v: any): number | null => {
+    if (typeof v === 'number' && !isNaN(v)) return v;
+    if (typeof v === 'string') {
+      const num = parseFloat(v);
+      if (!isNaN(num)) return num;
+    }
+    return null;
+  };
+
+  // Real-time ESP32 temperature & pH fetcher (polling http://192.168.1.10:5000/api/data with fallback)
   useEffect(() => {
     let isMounted = true;
 
@@ -78,17 +88,16 @@ export default function Home() {
 
         const json = await response.json();
 
-        console.log("ESP32 data:", json);
+        console.log("ESP32 data received:", json);
 
-        const fetchedTemp =
+        const rawTemp =
           json.temperature ??
           json.temp ??
           json.data?.temperature ??
           json.data?.temp ??
-          json.parameters?.temperature ??
-          json.value;
+          json.parameters?.temperature;
 
-        const fetchedPh =
+        const rawPh =
           json.ph ??
           json.pH ??
           json.data?.ph ??
@@ -96,24 +105,67 @@ export default function Home() {
           json.parameters?.ph ??
           json.parameters?.pH;
 
-        const hasTemp = typeof fetchedTemp === 'number' && !isNaN(fetchedTemp);
-        const hasPh = typeof fetchedPh === 'number' && !isNaN(fetchedPh);
+        const fetchedTemp = parseVal(rawTemp);
+        const fetchedPh = parseVal(rawPh);
 
-        if ((hasTemp || hasPh) && isMounted) {
+        if ((fetchedTemp !== null || fetchedPh !== null) && isMounted) {
           setIsApiConnected(true);
 
           setAlarmData(prev => {
-            const updatedParams = {
+            const updatedParams: WaterParameters = {
               ...prev.parameters,
-              ...(hasTemp ? { temperature: fetchedTemp } : {}),
-              ...(hasPh ? { ph: fetchedPh } : {})
+              ...(fetchedTemp !== null ? { temperature: fetchedTemp } : {}),
+              ...(fetchedPh !== null ? { ph: fetchedPh } : {})
             };
 
-            handleUpdateParameters(updatedParams);
+            const triggers: string[] = [];
+            if (updatedParams.ph < 6.5 || updatedParams.ph > 8.5) {
+              triggers.push(`pH outside safe range (${updatedParams.ph})`);
+            }
+            if (updatedParams.tds > 500) {
+              triggers.push(`High TDS level (${updatedParams.tds} ppm)`);
+            }
+            if (updatedParams.turbidity > 15) {
+              triggers.push(`High turbidity (${updatedParams.turbidity} NTU)`);
+            }
+            if (updatedParams.temperature > 28) {
+              triggers.push(`High water temperature (${updatedParams.temperature} °C)`);
+            }
+
+            const isUnsafe = triggers.length > 0;
+            const newStatus: 'SAFE' | 'UNSAFE' = isUnsafe ? 'UNSAFE' : 'SAFE';
+
+            if (prevStatusRef.current !== newStatus && !audioMuted) {
+              speakMultilingualMaleAlert(newStatus);
+              if (newStatus === 'UNSAFE') {
+                startSirenAudio();
+              } else {
+                stopSirenAudio();
+              }
+              prevStatusRef.current = newStatus;
+            } else if (newStatus === 'SAFE') {
+              stopSirenAudio();
+            }
 
             return {
               ...prev,
-              parameters: updatedParams
+              status: newStatus,
+              alarmLevel: isUnsafe ? 'HIGH' : 'NORMAL',
+              microbialRisk: isUnsafe ? 'HIGH' : 'LOW',
+              timestamp: new Date().toISOString(),
+              parameters: updatedParams,
+              purification: {
+                uv: !isUnsafe,
+                roUf: !isUnsafe
+              },
+              trigger: isUnsafe
+                ? [...triggers, "Purification system inactive", "High microbial contamination risk"]
+                : [],
+              actions: {
+                siren: isUnsafe,
+                sms: isUnsafe,
+                smsRecipients: isUnsafe ? 12 : 0
+              }
             };
           });
 
@@ -125,7 +177,7 @@ export default function Home() {
         }
 
       } catch (error) {
-        console.error("Temperature API error:", error);
+        console.error("Temperature/pH API error:", error);
 
         if (isMounted) {
           setIsApiConnected(false);
