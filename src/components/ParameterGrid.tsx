@@ -21,7 +21,7 @@ export const ParameterGrid: React.FC<ParameterGridProps> = ({ parameters, isApiC
 
       {/* Grid of Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        <ParameterCard paramKey="ph" value={parameters.ph} />
+        <ParameterCard paramKey="ph" value={parameters.ph} isApiConnected={isApiConnected} />
         <ParameterCard paramKey="tds" value={parameters.tds} />
         <ParameterCard paramKey="turbidity" value={parameters.turbidity} />
         <ParameterCard paramKey="temperature" value={parameters.temperature} isApiConnected={isApiConnected} />

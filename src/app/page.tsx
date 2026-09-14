@@ -88,17 +88,25 @@ export default function Home() {
           json.parameters?.temperature ??
           json.value;
 
-        if (
-          typeof fetchedTemp === 'number' &&
-          !isNaN(fetchedTemp) &&
-          isMounted
-        ) {
+        const fetchedPh =
+          json.ph ??
+          json.pH ??
+          json.data?.ph ??
+          json.data?.pH ??
+          json.parameters?.ph ??
+          json.parameters?.pH;
+
+        const hasTemp = typeof fetchedTemp === 'number' && !isNaN(fetchedTemp);
+        const hasPh = typeof fetchedPh === 'number' && !isNaN(fetchedPh);
+
+        if ((hasTemp || hasPh) && isMounted) {
           setIsApiConnected(true);
 
           setAlarmData(prev => {
             const updatedParams = {
               ...prev.parameters,
-              temperature: fetchedTemp
+              ...(hasTemp ? { temperature: fetchedTemp } : {}),
+              ...(hasPh ? { ph: fetchedPh } : {})
             };
 
             handleUpdateParameters(updatedParams);

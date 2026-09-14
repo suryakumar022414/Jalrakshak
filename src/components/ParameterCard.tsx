@@ -54,13 +54,13 @@ export const ParameterCard: React.FC<ParameterCardProps> = ({ paramKey, value, i
           <span className="font-semibold text-sm">{config.label}</span>
         </div>
 
-        {paramKey === 'temperature' && (
+        {(paramKey === 'temperature' || paramKey === 'ph') && (
           <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded border ${
             isApiConnected
               ? 'bg-cyan-950/90 text-cyan-300 border-cyan-700 animate-pulse'
               : 'bg-slate-800/80 text-slate-400 border-slate-700'
           }`}>
-            {isApiConnected ? '● Port 5000 API' : '● Mock Data'}
+            {isApiConnected ? '● ESP32 API' : '● Mock Data'}
           </span>
         )}
       </div>
@@ -82,11 +82,11 @@ export const ParameterCard: React.FC<ParameterCardProps> = ({ paramKey, value, i
         <div className="flex items-center gap-1.5">
           <span className={`w-2 h-2 rounded-full ${isConcerning ? 'bg-red-500 animate-ping' : 'bg-emerald-400'}`} />
           <span className={isConcerning ? 'text-red-400' : 'text-emerald-400'}>
-            {isConcerning ? '• Unsafe (High Temp)' : '• Safe'}
+            {isConcerning ? `• Unsafe (${config.label})` : '• Safe'}
           </span>
         </div>
 
-        {paramKey === 'temperature' && isApiConnected && (
+        {(paramKey === 'temperature' || paramKey === 'ph') && isApiConnected && (
           <span className="text-[10px] text-cyan-400 font-mono">Live API Data</span>
         )}
       </div>
